@@ -2,103 +2,102 @@ package com.chatapp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Main {
-    private static final String USER_FILE = "users.json";
-    public static String currentUser;
-    public static String currentUserId;
-    private static Map<String, String> users = new HashMap<>();
+    private static final int PORT = 8080;
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final List<ClientHandler> clients = new CopyOnWriteArrayList<>();
 
     public static void main(String[] args) {
-        loadUsers();
-        registerUserIfNeeded();
-
-        int port = 8080;
-        ChatServer server = new ChatServer(port);
-        server.start();
-
-        System.out.println("P2P Chat Application Started");
-        System.out.println("Chat Server running on port: " + port);
-        
-        // Start chat client for user interaction
-        startChatClient();
-    }
-
-    private static void loadUsers() {
-        ObjectMapper mapper = new ObjectMapper();
-        File file = new File(USER_FILE);
-        if (file.exists()) {
-            try {
-                users = mapper.readValue(file, Map.class);
-            } catch (IOException e) {
-                System.out.println("Failed to load users: " + e.getMessage());
-            }
-        }
-    }
-
-    private static void registerUserIfNeeded() {
-        File identityFile = new File("identity.txt");
-        if (identityFile.exists()) {
-            try (BufferedReader reader = new BufferedReader(new FileReader(identityFile))) {
-                currentUser = reader.readLine();
-                currentUserId = users.getOrDefault(currentUser, UUID.randomUUID().toString());
-                System.out.println("Welcome back, " + currentUser + "!");
-                return;
-            } catch (IOException e) {
-                System.out.println("Error reading identity file: " + e.getMessage());
-            }
-        }
-
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Enter your username: ");
-        currentUser = scanner.nextLine().trim();
-
-        if (!users.containsKey(currentUser)) {
-            currentUserId = UUID.randomUUID().toString();
-            users.put(currentUser, currentUserId);
-            saveUsers();
+        if (args.length > 0 && args[0].equalsIgnoreCase("server")) {
+            startServer();
         } else {
-            currentUserId = users.get(currentUser);
-        }
-
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(identityFile))) {
-            writer.write(currentUser);
-        } catch (IOException e) {
-            System.out.println("Error saving identity file: " + e.getMessage());
-        }
-
-        System.out.println("Welcome, " + currentUser + "! Your unique ID: " + currentUserId);
-    }
-
-    private static void saveUsers() {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            mapper.writeValue(new File(USER_FILE), users);
-        } catch (IOException e) {
-            System.out.println("Failed to save users: " + e.getMessage());
+            startClient();
         }
     }
 
-    private static void startChatClient() {
-        try (Socket socket = new Socket("localhost", 8080);
-             BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
-             PrintWriter output = new PrintWriter(socket.getOutputStream(), true)) {
-
-            System.out.println("Connected to chat server. Type messages below:");
-            
+    private static void startServer() {
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            System.out.println("Chat Server running on port: " + PORT);
             while (true) {
-                String message = input.readLine().trim();
-                if ("exit".equalsIgnoreCase(message)) {
-                    System.out.println("Exiting chat...");
-                    break;
-                }
-                output.println(currentUser + ": " + message);
+                Socket clientSocket = serverSocket.accept();
+                ClientHandler clientHandler = new ClientHandler(clientSocket);
+                clients.add(clientHandler);
+                new Thread(clientHandler).start();
             }
         } catch (IOException e) {
-            System.out.println("Error connecting to chat server: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private static void startClient() {
+        try (Socket socket = new Socket("localhost", PORT);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             Scanner scanner = new Scanner(System.in)) {
+            
+            System.out.println("Connected to chat server. Type messages below:");
+
+            Thread receiveThread = new Thread(() -> {
+                String message;
+                try {
+                    while ((message = in.readLine()) != null) {
+                        System.out.println(message);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+            receiveThread.start();
+
+            while (scanner.hasNextLine()) {
+                String userMessage = scanner.nextLine();
+                out.println(userMessage);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    static class ClientHandler implements Runnable {
+        private final Socket clientSocket;
+        private PrintWriter out;
+
+        public ClientHandler(Socket socket) {
+            this.clientSocket = socket;
+        }
+
+        @Override
+        public void run() {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                 PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
+
+                this.out = out;
+                String message;
+                while ((message = in.readLine()) != null) {
+                    System.out.println("Client: " + message);
+                    broadcastMessage("Client: " + message);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                clients.remove(this);
+            }
+        }
+
+        private void broadcastMessage(String message) {
+            for (ClientHandler client : clients) {
+                client.sendMessage(message);
+            }
+        }
+
+        private void sendMessage(String message) {
+            if (out != null) {
+                out.println(message);
+            }
         }
     }
 }

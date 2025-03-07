@@ -1,50 +1,49 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://www.apache.org/xsd/maven-4.0.0.xsd">
+  
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.chatapp</groupId>
     <artifactId>P2PChatApp</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
+    <packaging>jar</packaging>
+
+    <name>P2P Chat Application</name>
+    <description>A simple P2P chat application using Java sockets</description>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+    </properties>
 
     <dependencies>
-        <!-- Java WebSocket Library -->
-        <dependency>
-            <groupId>org.java-websocket</groupId>
-            <artifactId>Java-WebSocket</artifactId>
-            <version>1.5.3</version>
-        </dependency>
-
-        <!-- Jackson Databind for JSON Parsing -->
+        <!-- Jackson Databind for JSON processing -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>2.15.0</version>
         </dependency>
-
-        <!-- SLF4J API -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>2.0.7</version>
-        </dependency>
-
-        <!-- SLF4J Simple Logger (Fix SLF4J Warning) -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>2.0.7</version>
-        </dependency>
     </dependencies>
 
     <build>
         <plugins>
-            <!-- Maven Jar Plugin: Defines the entry point -->
+            <!-- Compiler Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>17</source>
+                    <target>17</target>
+                </configuration>
+            </plugin>
+
+            <!-- JAR Plugin to specify the main class -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.2</version>
+                <version>3.2.0</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -54,21 +53,20 @@
                 </configuration>
             </plugin>
 
-            <!-- Maven Shade Plugin: Packages all dependencies into a single JAR -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.4.1</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+             <groupId>org.apache.maven.plugins</groupId>
+             <artifactId>maven-shade-plugin</artifactId>
+             <version>3.3.0</version>
+              <executions>
+              <execution>
+               <phase>package</phase>
+             <goals>
+                <goal>shade</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+
         </plugins>
     </build>
-
 </project>
