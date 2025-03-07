@@ -1,29 +1,30 @@
-// Main.java - Entry point to start Chat Server
-
 package com.chatapp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.*;
-import java.time.LocalDateTime;
 
 public class Main {
     private static final String USER_FILE = "users.json";
-    private static final String DATA_DIR = "data";
-    private static Map<String, String> users = new HashMap<>();
     public static String currentUser;
     public static String currentUserId;
-    private static Map<String, Boolean> storagePreferences = new HashMap<>();
+    private static Map<String, String> users = new HashMap<>();
 
     public static void main(String[] args) {
         loadUsers();
         registerUserIfNeeded();
-        ensureDataDirectoryExists();
+
         int port = 8080;
         ChatServer server = new ChatServer(port);
         server.start();
+
         System.out.println("P2P Chat Application Started");
         System.out.println("Chat Server running on port: " + port);
+        
+        // Start chat client for user interaction
+        startChatClient();
     }
 
     private static void loadUsers() {
@@ -43,18 +44,18 @@ public class Main {
         if (identityFile.exists()) {
             try (BufferedReader reader = new BufferedReader(new FileReader(identityFile))) {
                 currentUser = reader.readLine();
-                currentUserId = users.get(currentUser);
+                currentUserId = users.getOrDefault(currentUser, UUID.randomUUID().toString());
                 System.out.println("Welcome back, " + currentUser + "!");
                 return;
             } catch (IOException e) {
                 System.out.println("Error reading identity file: " + e.getMessage());
             }
         }
-        
+
         Scanner scanner = new Scanner(System.in);
         System.out.print("Enter your username: ");
         currentUser = scanner.nextLine().trim();
-        
+
         if (!users.containsKey(currentUser)) {
             currentUserId = UUID.randomUUID().toString();
             users.put(currentUser, currentUserId);
@@ -62,13 +63,13 @@ public class Main {
         } else {
             currentUserId = users.get(currentUser);
         }
-        
+
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(identityFile))) {
             writer.write(currentUser);
         } catch (IOException e) {
             System.out.println("Error saving identity file: " + e.getMessage());
         }
-        
+
         System.out.println("Welcome, " + currentUser + "! Your unique ID: " + currentUserId);
     }
 
@@ -81,10 +82,23 @@ public class Main {
         }
     }
 
-    private static void ensureDataDirectoryExists() {
-        File dataDir = new File(DATA_DIR);
-        if (!dataDir.exists()) {
-            dataDir.mkdir();
+    private static void startChatClient() {
+        try (Socket socket = new Socket("localhost", 8080);
+             BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+             PrintWriter output = new PrintWriter(socket.getOutputStream(), true)) {
+
+            System.out.println("Connected to chat server. Type messages below:");
+            
+            while (true) {
+                String message = input.readLine().trim();
+                if ("exit".equalsIgnoreCase(message)) {
+                    System.out.println("Exiting chat...");
+                    break;
+                }
+                output.println(currentUser + ": " + message);
+            }
+        } catch (IOException e) {
+            System.out.println("Error connecting to chat server: " + e.getMessage());
         }
     }
 }

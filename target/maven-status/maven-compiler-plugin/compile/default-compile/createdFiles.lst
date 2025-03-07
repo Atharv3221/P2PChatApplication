@@ -1,3 +1,5 @@
 com\chatapp\ChatClient.class
-com\chatapp\ChatServer.class
+com\chatapp\ChatServer$ClientHandler.class
 com\chatapp\Main.class
+com\chatapp\ChatClient$1.class
+com\chatapp\ChatServer.class

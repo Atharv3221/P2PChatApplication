@@ -1,69 +1,49 @@
-// ChatServer.java - Handles multiple client connections
-
 package com.chatapp;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.java_websocket.server.WebSocketServer;
-import org.java_websocket.handshake.ClientHandshake;
-import org.java_websocket.WebSocket;
-import java.net.InetSocketAddress;
-import java.io.IOException;
-import java.util.*;
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
 
-public class ChatServer extends WebSocketServer {
-    private static Map<WebSocket, String> connections = new HashMap<>();
+public class ChatServer {
+    private int port;
 
     public ChatServer(int port) {
-        super(new InetSocketAddress(port));
+        this.port = port;
     }
 
-    @Override
-    public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        connections.put(conn, null);
-        System.out.println("New connection: " + conn.getRemoteSocketAddress());
-    }
-
-    @Override
-    public void onMessage(WebSocket conn, String message) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            Map<String, String> msgData = mapper.readValue(message, Map.class);
-            String sender = msgData.get("sender");
-            String recipient = msgData.get("recipient");
-            String msgText = msgData.get("message");
-
-            if (sender != null) {
-                connections.put(conn, sender);
-            }
-
-            if (recipient != null && connections.containsValue(recipient)) {
-                for (Map.Entry<WebSocket, String> entry : connections.entrySet()) {
-                    if (entry.getValue().equals(recipient)) {
-                        entry.getKey().send(mapper.writeValueAsString(msgData));
-                        break;
-                    }
+    public void start() {
+        new Thread(() -> {
+            try (ServerSocket serverSocket = new ServerSocket(port)) {
+                System.out.println("ChatServer started successfully");
+                while (true) {
+                    Socket clientSocket = serverSocket.accept();
+                    new ClientHandler(clientSocket).start();
                 }
-            } else {
-                conn.send("User not available.");
+            } catch (IOException e) {
+                System.out.println("Error starting server: " + e.getMessage());
             }
-        } catch (IOException e) {
-            System.out.println("Message handling error: " + e.getMessage());
+        }).start();
+    }
+
+    private static class ClientHandler extends Thread {
+        private Socket socket;
+
+        public ClientHandler(Socket socket) {
+            this.socket = socket;
         }
-    }
 
-    @Override
-    public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        connections.remove(conn);
-        System.out.println("Closed connection: " + conn.getRemoteSocketAddress());
-    }
+        public void run() {
+            try (BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                 PrintWriter output = new PrintWriter(socket.getOutputStream(), true)) {
 
-    @Override
-    public void onError(WebSocket conn, Exception ex) {
-        System.out.println("Error: " + ex.getMessage());
-    }
-
-    @Override
-    public void onStart() {
-        System.out.println("ChatServer started successfully");
+                String message;
+                while ((message = input.readLine()) != null) {
+                    System.out.println("Received: " + message);
+                    output.println("Echo: " + message);
+                }
+            } catch (IOException e) {
+                System.out.println("Client disconnected");
+            }
+        }
     }
 }
