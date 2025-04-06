@@ -1,35 +1,38 @@
 package p2pchatapplication;
 
-import java.net.*;
-import java.util.*;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.util.Enumeration;
 
 public class NetworkUtils {
-    public static String getMyIPAddress() {
+
+    /**
+     * Returns the machine's local IP address (on LAN).
+     *
+     * @return the LAN IP address as a String
+     */
+    public static String getLocalIp() {
         try {
-            for (Enumeration<NetworkInterface> e = NetworkInterface.getNetworkInterfaces(); e.hasMoreElements();) {
-                NetworkInterface ni = e.nextElement();
-                for (Enumeration<InetAddress> ee = ni.getInetAddresses(); ee.hasMoreElements();) {
-                    InetAddress ia = ee.nextElement();
-                    if (!ia.isLoopbackAddress() && ia instanceof Inet4Address) {
-                        return ia.getHostAddress();
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface iface = interfaces.nextElement();
+
+                if (iface.isLoopback() || !iface.isUp() || iface.isVirtual()) continue;
+
+                Enumeration<InetAddress> addresses = iface.getInetAddresses();
+
+                while (addresses.hasMoreElements()) {
+                    InetAddress addr = addresses.nextElement();
+
+                    if (!addr.isLoopbackAddress() && addr.getHostAddress().indexOf(":") == -1) {
+                        return addr.getHostAddress();  // IPv4 only
                     }
                 }
             }
-        } catch (SocketException e) {
-            System.out.println("❌ IP Error: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("[NetworkUtils] Error getting IP: " + e.getMessage());
         }
         return "127.0.0.1";
     }
-
-    public static List<String> getLocalSubnetIPs() {
-        List<String> ips = new ArrayList<>();
-        String myIP = getMyIPAddress();
-        String subnet = myIP.substring(0, myIP.lastIndexOf("."));
-
-        for (int i = 1; i < 255; i++) {
-            ips.add(subnet + "." + i);
-        }
-        return ips;
-    }
 }
-

@@ -1,39 +1,44 @@
 package p2pchatapplication;
 
-import java.io.*;
-import java.net.*;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.Socket;
 
+/**
+ * Handles an incoming connection to the ChatServer.
+ */
 public class ClientHandler implements Runnable {
-    private final Socket socket;
+    private final Socket clientSocket;
 
+    /**
+     * Constructs a new ClientHandler.
+     *
+     * @param socket the socket connected to the client
+     */
     public ClientHandler(Socket socket) {
-        this.socket = socket;
+        this.clientSocket = socket;
     }
 
+    /**
+     * Continuously reads and processes incoming messages from the socket.
+     */
     @Override
     public void run() {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-            String msg;
-            while ((msg = in.readLine()) != null) {
-                JsonObject json = JsonParser.parseString(msg).getAsJsonObject();
-                String type = json.has("type") ? json.get("type").getAsString() : "";
-
-                if ("DISCOVER".equalsIgnoreCase(type)) {
-                    String username = json.has("username") ? json.get("username").getAsString() : "";
-                    if (UserManager.isFriend(username)) {
-                        FriendManager.addActiveFriend(username, socket.getInetAddress().getHostAddress());
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.startsWith("@")) {
+                    int sepIndex = line.indexOf('|');
+                    if (sepIndex != -1) {
+                        String sender = line.substring(1, sepIndex);
+                        String message = line.substring(sepIndex + 1);
+                        ChatServer.printReceivedMessage(sender, message);
                     }
-                } else if ("MESSAGE".equalsIgnoreCase(type)) {
-                    String from = json.get("from").getAsString();
-                    String message = json.get("message").getAsString();
-                    System.out.println("Received: @" + from + " \"" + message + "\"");
-                    ChatClient.appendToChatHistory("Received: @" + from + " \"" + message + "\"");
                 }
             }
         } catch (IOException e) {
-            System.out.println("Client disconnected.");
+            System.out.println("[ClientHandler] Connection closed or error: " + e.getMessage());
         }
     }
 }
