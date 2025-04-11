@@ -1,0 +1,9 @@
+p2pchatapplication\Main.class
+p2pchatapplication\NetworkUtils.class
+p2pchatapplication\ChatClient.class
+p2pchatapplication\ClientHandler.class
+p2pchatapplication\FriendManager$1.class
+p2pchatapplication\UserManager.class
+p2pchatapplication\ChatServer.class
+p2pchatapplication\FriendManager.class
+p2pchatapplication\CommandHandler.class
