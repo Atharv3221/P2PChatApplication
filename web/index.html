@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LAN Chat System Overview</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>LAN Chat System</h1>
+    <p>A Local Network Peer-to-Peer Chat Architecture</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>User Interaction</h2>
+      <p>Users interact with the system via a console interface, entering commands to manage friends, send messages, and view online users.</p>
+    </section>
+
+    <section>
+      <h2>UDP-Based Peer Discovery</h2>
+      <p>The system broadcasts a <strong>DISCOVER</strong> packet using UDP to identify peers on the same network. Peers reply with a <strong>RESPONSE</strong> containing their UID and IP address.</p>
+      <ul>
+        <li><strong>DiscoveryListener:</strong> Listens for DISCOVER packets</li>
+        <li><strong>ResponseListener:</strong> Handles incoming RESPONSE packets</li>
+        <li><strong>FriendManager:</strong> Initiates discovery and updates the list of available peers</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>TCP Communication</h2>
+      <p>Once peers are discovered, messages are exchanged using TCP. This ensures reliable delivery of chat messages.</p>
+      <ul>
+        <li><strong>ChatClient:</strong> Connects and sends messages to the peer's ChatServer</li>
+        <li><strong>ChatServer:</strong> Listens on TCP port 5000 and accepts incoming connections</li>
+        <li><strong>ClientHandler:</strong> Handles message reception and displays to the user</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Core Logic Modules</h2>
+      <ul>
+        <li><strong>CommandHandler:</strong> Parses user commands and routes them to the correct module</li>
+        <li><strong>FriendManager:</strong> Maintains list of friends and their status</li>
+        <li><strong>UserManager:</strong> Loads and stores the local username</li>
+        <li><strong>NetworkUtils:</strong> Determines the local IP address for communication</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Overall Flow</h2>
+      <ol>
+        <li>User starts the application and sets username (saved locally)</li>
+        <li>DISCOVER packet is broadcasted</li>
+        <li>Other users respond with RESPONSE packets</li>
+        <li>List of available peers is updated</li>
+        <li>User selects a peer and sends a message</li>
+        <li>Message is sent via TCP and displayed on the receiving side</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 LAN Chat System - Apache 2.0 License</p>
+  </footer>
+</body>
+</html>
