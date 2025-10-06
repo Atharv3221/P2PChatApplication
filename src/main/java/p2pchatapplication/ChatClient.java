@@ -1,4 +1,4 @@
-package p2pchatapplication;
+package p2p.chat.application;
 
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -12,8 +12,8 @@ public class ChatClient {
 
   /**
    * Sends a formatted message to the given IP address.
-   *
-   * Format: "@senderUsername|message"
+   * 
+   * <p>Format: "@senderUsername|message"
    *
    * @param targetUsername The recipient's username (for display only)
    * @param message        The message content
@@ -28,9 +28,9 @@ public class ChatClient {
       writer.println(formattedMessage);
 
       System.out.println("Sent: @" + targetUsername + " \"" + message + "\"");
-
     } catch (Exception e) {
-      System.out.println("[ChatClient] Failed to send message to @" + targetUsername + ": " + e.getMessage());
+      System.out.println("[ChatClient] Failed to send message to @" + targetUsername
+          + ": " + e.getMessage());
     }
   }
 }
