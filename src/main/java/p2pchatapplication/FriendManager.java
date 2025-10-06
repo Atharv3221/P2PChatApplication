@@ -1,8 +1,7 @@
-package p2pchatapplication;
+package p2p.chat.application;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-
 import java.io.*;
 import java.lang.reflect.Type;
 import java.net.*;
@@ -14,7 +13,7 @@ import java.util.*;
  */
 public class FriendManager {
     private static final String USERS_FILE = System.getProperty("user.dir") + File.separator +
-            "src" + File.separator + "main" + File.separator + "resources" + File.separator + "users.json";
+        "src" + File.separator + "main" + File.separator + "resources" + File.separator + "users.json";
 
     private static final int DISCOVERY_PORT = 6000;
     private static final int RESPONSE_PORT = 6001;
@@ -25,6 +24,7 @@ public class FriendManager {
 
     private FriendManager() {}
 
+    /**
     /**
      * Gets the singleton instance.
      */
@@ -55,6 +55,8 @@ public class FriendManager {
             return users != null ? users : new ArrayList<>();
         } catch (IOException e) {
             return new ArrayList<>();
+        }
+    }
         }
     }
 
