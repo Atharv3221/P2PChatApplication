@@ -1,4 +1,4 @@
-package p2pchatapplication;
+package p2p.chat.application;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,13 +13,15 @@ public class ClientHandler implements Runnable {
 
     /**
      * Constructs a new ClientHandler.
-     *
+     */
+    private final Socket clientSocket;
      * @param socket the socket connected to the client
      */
     public ClientHandler(Socket socket) {
         this.clientSocket = socket;
     }
 
+    /**
     /**
      * Continuously reads and processes incoming messages from the socket.
      */
@@ -32,9 +34,8 @@ public class ClientHandler implements Runnable {
                     int sepIndex = line.indexOf('|');
                     if (sepIndex != -1) {
                         String sender = line.substring(1, sepIndex);
-                        String message = line.substring(sepIndex + 1);
-                        ChatServer.printReceivedMessage(sender, message);
-                    }
+                    String message = line.substring(sepIndex + 1);
+                    ChatServer.printReceivedMessage(sender, message);
                 }
             }
         } catch (IOException e) {
