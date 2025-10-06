@@ -1,4 +1,4 @@
-package p2pchatapplication;
+package p2p.chat.application;
 
 /**
  * Handles user input commands for chat, friend management, and discovery.
@@ -11,20 +11,20 @@ public class CommandHandler {
      * Constructs a new CommandHandler.
      *
      * @param chatClient     The ChatClient used to send messages.
+    /**
      * @param friendManager  The FriendManager handling friend-related tasks.
      */
     public CommandHandler(ChatClient chatClient, FriendManager friendManager) {
         this.chatClient = chatClient;
         this.friendManager = friendManager;
     }
-
     /**
      * Processes a command entered by the user via console input.
      *
      * Supported commands:
-     * - @Add <username>: Adds a new friend and starts discovery.
+     * - @Add &lt;username&gt;: Adds a new friend and starts discovery.
      * - @Users: Lists online friends.
-     * - @<username> <message>: Sends a direct message to the friend.
+     * - @&lt;username&gt; &lt;message&gt;: Sends a direct message to the friend.
      *
      * @param input The raw command line input entered by the user.
      */
@@ -33,11 +33,9 @@ public class CommandHandler {
             String username = input.substring(5).trim();
             if (friendManager.addFriend(username)) {
                 System.out.println("[CommandHandler] Added user: @" + username);
-                friendManager.broadcastDiscovery(username);
             } else {
                 System.out.println("[CommandHandler] User already added or error occurred.");
             }
-
         } else if (input.equalsIgnoreCase("@Users")) {
             System.out.println("Online Users:");
             friendManager.getOnlineUsers().forEach((name, ip) ->
