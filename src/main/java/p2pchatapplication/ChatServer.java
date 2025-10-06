@@ -1,4 +1,4 @@
-package p2pchatapplication;
+package p2p.chat.application;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -18,24 +18,21 @@ public class ChatServer implements Runnable {
     public void run() {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("[ChatServer] Listening on port " + PORT + "...");
-
             while (true) {
                 try {
                     Socket clientSocket = serverSocket.accept();
-                   new Thread(new ClientHandler(clientSocket)).start();
+                    new Thread(new ClientHandler(clientSocket)).start();
                 } catch (IOException e) {
                     System.out.println("[ChatServer] Failed to accept client: " + e.getMessage());
                 }
             }
 
         } catch (IOException e) {
-            System.out.println("[ChatServer] Error starting server: " + e.getMessage());
-        }
     }
 
     /**
      * Prints received messages in the required format.
-     *
+     */
      * @param username the sender's username
      * @param message  the message text
      */
