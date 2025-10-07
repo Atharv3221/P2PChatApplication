@@ -17,7 +17,6 @@ public class CommandHandler {
         this.chatClient = chatClient;
         this.friendManager = friendManager;
     }
-
     /**
      * Processes a command entered by the user via console input.
      *
